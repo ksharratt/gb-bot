@@ -13,7 +13,7 @@ from dotenv import set_key
 
 import unicodedata
 
-from roles import assign
+import roles
 
 def strip_non_ascii(text):
     return ''.join(c for c in unicodedata.normalize('NFKD', text)
@@ -187,7 +187,8 @@ async def generate_leaderboard(interaction: discord.Interaction, points_dict,
                                      \n{leaderboard}\n```")
 
     LEADERBOARD_MESSAGE_ID = new_message.id
-    #    set_key(".env", "LEADERBOARD_MESSAGE_ID", str(LEADERBOARD_MESSAGE_ID))
+    # Assign roles based on the leaderboard
+    await roles.assign(interaction, sorted_dict)
 
     return tabulate(leaderboard)
 

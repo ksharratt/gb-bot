@@ -9,7 +9,6 @@ from discord import Embed
 from discord.ext import tasks
 import json
 from datetime import datetime
-from dotenv import set_key
 
 import unicodedata
 

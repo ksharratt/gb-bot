@@ -25,12 +25,18 @@ intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 
-TOKEN = os.environ["DISCORD_TOKEN"]
-GUILD = int(os.environ["DEV_DISCORD_GUILD"])
-LEADERBOARD_CHANNEL_ID = int(
-    os.environ["DEV_LEADERBOARD_CHANNEL_ID"]
-)  # Assuming the ID is stored as a string in the .env file
-LEADERBOARD_MESSAGE_ID = os.environ["LEADERBOARD_MESSAGE_ID"]
+env_type = os.getenv('ENV_TYPE')
+
+if env_type == 'dev':
+    TOKEN = os.getenv("DISCORD_TOKEN")
+    GUILD = int(os.getenv("DEV_DISCORD_GUILD"))
+    LEADERBOARD_CHANNEL_ID = int(os.getenv("DEV_LEADERBOARD_CHANNEL_ID"))
+    LEADERBOARD_MESSAGE_ID = os.getenv("DEV_LEADERBOARD_MESSAGE_ID")
+else:  # 'prod' or any other value
+    TOKEN = os.getenv("DISCORD_TOKEN")
+    GUILD = int(os.getenv("DISCORD_GUILD"))
+    LEADERBOARD_CHANNEL_ID = int(os.getenv("LEADERBOARD_CHANNEL_ID"))
+    LEADERBOARD_MESSAGE_ID = os.getenv("LEADERBOARD_MESSAGE_ID")
 
 # Initialize an empty dictionary to store points for each user
 amp_points = Counter()

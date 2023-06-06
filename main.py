@@ -26,10 +26,10 @@ client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 
 TOKEN = os.environ["DISCORD_TOKEN"]
-GUILD = int(os.environ["DISCORD_GUILD"])
+GUILD = int(os.environ["DEV_DISCORD_GUILD"])
 LEADERBOARD_CHANNEL_ID = int(
-    os.environ["LEADERBOARD_CHANNEL_ID"
-            ])  # Assuming the ID is stored as a string in the .env file
+    os.environ["DEV_LEADERBOARD_CHANNEL_ID"]
+)  # Assuming the ID is stored as a string in the .env file
 LEADERBOARD_MESSAGE_ID = os.environ["LEADERBOARD_MESSAGE_ID"]
 
 # Initialize an empty dictionary to store points for each user
@@ -186,7 +186,7 @@ async def generate_leaderboard(interaction: discord.Interaction, points_dict,
                                      \n{leaderboard}\n```")
 
     LEADERBOARD_MESSAGE_ID = new_message.id
-    set_key(".env", "LEADERBOARD_MESSAGE_ID", str(LEADERBOARD_MESSAGE_ID))
+    #    set_key(".env", "LEADERBOARD_MESSAGE_ID", str(LEADERBOARD_MESSAGE_ID))
 
     return tabulate(leaderboard)
 

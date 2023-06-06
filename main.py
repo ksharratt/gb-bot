@@ -11,8 +11,10 @@ import json
 from datetime import datetime
 
 import unicodedata
+from replit import db
 
 import roles
+
 
 def strip_non_ascii(text):
     return ''.join(c for c in unicodedata.normalize('NFKD', text)
@@ -72,6 +74,22 @@ async def record_to_file(interaction: discord.Interaction, count: int,
         f.write('\n')
 
 
+async def record_to_db(interaction: discord.Interaction, count: int,
+                       category: str):
+    guild = interaction.guild  # This is a discord.Guild object
+    user = await guild.fetch_member(interaction.user.id)
+    key = f"{interaction.user.id}_{category}"
+    data = {
+        "id": interaction.user.id,
+        "name": user.display_name,  # using display name instead of name
+        "count": count,
+        "category": category,  # add the category here
+        "timestamp": datetime.now().isoformat(),
+    }
+    # Store the data in the replit db
+    db[key] = data
+
+
 @tree.command(name="add",
               description="Add points for a task",
               guild=discord.Object(id=int(GUILD)))
@@ -95,7 +113,7 @@ async def add_points(interaction: discord.Interaction, tasks: str):
     await generate_leaderboard(interaction, user_points, "amp")
 
     # Record data to a local file
-    await record_to_file(interaction, amp_count * points['amp'], 'amp')
+    await record_to_db(interaction, amp_count * points['amp'], 'amp')
 
 
 @tree.command(name="remove",
@@ -124,7 +142,7 @@ async def remove_points(interaction: discord.Interaction, tasks: str):
     # Record data to a local file
     for task, count in task_counts.items():
         if task in points:
-            await record_to_file(interaction, -count * points[task], task)
+            await record_to_db(interaction, -count * points[task], task)
 
 
 @tree.command(name="lb",
@@ -152,9 +170,10 @@ async def generate_leaderboard(interaction: discord.Interaction, points_dict,
     # Load historical data from JSON file on first run
     if first_run:
         try:
-            with open('data.json', 'r') as f:
-                for line in f:
-                    data = json.loads(line)
+            # Fetch data from the replit db
+            for key in db.keys():
+                if key.endswith(f"_{category}"):
+                    data = db[key]
                     user_points[data['id']][category] += data['count']
         except FileNotFoundError:
             pass

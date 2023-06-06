@@ -13,6 +13,7 @@ from dotenv import set_key
 
 import unicodedata
 
+from roles import assign
 
 def strip_non_ascii(text):
     return ''.join(c for c in unicodedata.normalize('NFKD', text)

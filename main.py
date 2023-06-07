@@ -139,21 +139,6 @@ async def remove_points(interaction: discord.Interaction, tasks: str):
             await record_to_db(interaction, -count * points[task], task)
 
 
-@tree.command(name="lb",
-              description="Show leaderboard for a category",
-              guild=discord.Object(id=int(GUILD)))
-async def leaderboard(interaction: discord.Interaction, category: str):
-    """Generate leaderboard for the given category."""
-    if category not in ['amp']:
-        await interaction.response.send_message(
-            f'Invalid category. Please choose amp.')
-    else:
-        leaderboard_data = await generate_leaderboard(interaction, user_points,
-                                                      category)
-        await interaction.response.send_message(f"```\n{leaderboard_data}\n```"
-                                                )
-
-
 # Function to generate leaderboard
 async def generate_leaderboard(interaction: discord.Interaction, points_dict,
                                category):
@@ -174,7 +159,7 @@ async def generate_leaderboard(interaction: discord.Interaction, points_dict,
                           )  # Debug print statement
                     if record['category'] == category:
                         user_points[record['id']][category] += record['count']
-        except FileNotFoundError:
+        except:
             pass
         finally:
             first_run = False

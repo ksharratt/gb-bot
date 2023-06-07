@@ -5,13 +5,15 @@ from discord import app_commands
 from collections import Counter
 from tabulate import tabulate
 from collections import defaultdict
-from discord import Embed
-from discord.ext import tasks
-import json
+#from discord import Embed
+#from discord.ext import tasks
+#import json
 from datetime import datetime
-from dotenv import set_key
 
 import unicodedata
+from replit import db
+
+import roles
 
 
 def strip_non_ascii(text):
@@ -25,12 +27,18 @@ intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 
-TOKEN = os.environ["DISCORD_TOKEN"]
-GUILD = int(os.environ["DISCORD_GUILD"])
-LEADERBOARD_CHANNEL_ID = int(
-    os.environ["LEADERBOARD_CHANNEL_ID"
-            ])  # Assuming the ID is stored as a string in the .env file
-LEADERBOARD_MESSAGE_ID = os.environ["LEADERBOARD_MESSAGE_ID"]
+env_type = os.getenv('ENV_TYPE')
+
+if env_type == 'dev':
+    TOKEN = os.getenv("DISCORD_TOKEN")
+    GUILD = int(os.getenv("DEV_DISCORD_GUILD"))
+    LEADERBOARD_CHANNEL_ID = int(os.getenv("DEV_LEADERBOARD_CHANNEL_ID"))
+    LEADERBOARD_MESSAGE_ID = os.getenv("DEV_LEADERBOARD_MESSAGE_ID")
+else:  # 'prod' or any other value
+    TOKEN = os.getenv("DISCORD_TOKEN")
+    GUILD = int(os.getenv("DISCORD_GUILD"))
+    LEADERBOARD_CHANNEL_ID = int(os.getenv("LEADERBOARD_CHANNEL_ID"))
+    LEADERBOARD_MESSAGE_ID = os.getenv("LEADERBOARD_MESSAGE_ID")
 
 # Initialize an empty dictionary to store points for each user
 amp_points = Counter()
@@ -50,20 +58,30 @@ def strip_non_ascii(text):
                    if unicodedata.category(c) != 'So')
 
 
-async def record_to_file(interaction: discord.Interaction, count: int,
-                         category: str):
+async def record_to_db(interaction: discord.Interaction, count: int,
+                       category: str):
     guild = interaction.guild  # This is a discord.Guild object
     user = await guild.fetch_member(interaction.user.id)
+    timestamp = datetime.now().isoformat()
+
     data = {
         "id": interaction.user.id,
         "name": user.display_name,  # using display name instead of name
         "count": count,
         "category": category,  # add the category here
-        "timestamp": datetime.now().isoformat(),
     }
-    with open('data.json', 'a') as f:
-        json.dump(data, f)
-        f.write('\n')
+
+    # Check if the user already has entries in the db
+    if str(interaction.user.id) in db.keys():
+        user_data = db[str(interaction.user.id)]
+    else:
+        user_data = {}
+
+    # Store the data under the timestamp key in the user's data
+    user_data[timestamp] = data
+
+    # Store the user's data back in the replit db
+    db[str(interaction.user.id)] = user_data
 
 
 @tree.command(name="add",
@@ -89,7 +107,7 @@ async def add_points(interaction: discord.Interaction, tasks: str):
     await generate_leaderboard(interaction, user_points, "amp")
 
     # Record data to a local file
-    await record_to_file(interaction, amp_count * points['amp'], 'amp')
+    await record_to_db(interaction, amp_count * points['amp'], 'amp')
 
 
 @tree.command(name="remove",
@@ -118,22 +136,7 @@ async def remove_points(interaction: discord.Interaction, tasks: str):
     # Record data to a local file
     for task, count in task_counts.items():
         if task in points:
-            await record_to_file(interaction, -count * points[task], task)
-
-
-@tree.command(name="lb",
-              description="Show leaderboard for a category",
-              guild=discord.Object(id=int(GUILD)))
-async def leaderboard(interaction: discord.Interaction, category: str):
-    """Generate leaderboard for the given category."""
-    if category not in ['amp']:
-        await interaction.response.send_message(
-            f'Invalid category. Please choose amp.')
-    else:
-        leaderboard_data = await generate_leaderboard(interaction, user_points,
-                                                      category)
-        await interaction.response.send_message(f"```\n{leaderboard_data}\n```"
-                                                )
+            await record_to_db(interaction, -count * points[task], task)
 
 
 # Function to generate leaderboard
@@ -143,14 +146,20 @@ async def generate_leaderboard(interaction: discord.Interaction, points_dict,
     global LEADERBOARD_MESSAGE_ID
     global first_run
 
-    # Load historical data from JSON file on first run
+    # Load historical data from database file on first run
     if first_run:
         try:
-            with open('data.json', 'r') as f:
-                for line in f:
-                    data = json.loads(line)
-                    user_points[data['id']][category] += data['count']
-        except FileNotFoundError:
+            # Fetch data from the replit db
+            for user_id in db.keys():
+                print(f"Debug user_id: {user_id}")  # Debug print statement
+                data = db[user_id]
+                print(f"Debug data: {data}")  # Debug print statement
+                for timestamp, record in data.items():
+                    print(f"Debug records: {timestamp}: {record}"
+                          )  # Debug print statement
+                    if record['category'] == category:
+                        user_points[record['id']][category] += record['count']
+        except:
             pass
         finally:
             first_run = False
@@ -186,7 +195,8 @@ async def generate_leaderboard(interaction: discord.Interaction, points_dict,
                                      \n{leaderboard}\n```")
 
     LEADERBOARD_MESSAGE_ID = new_message.id
-    set_key(".env", "LEADERBOARD_MESSAGE_ID", str(LEADERBOARD_MESSAGE_ID))
+    # Assign roles based on the leaderboard
+    await roles.assign(interaction, sorted_dict)
 
     return tabulate(leaderboard)
 

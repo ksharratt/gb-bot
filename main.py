@@ -5,9 +5,9 @@ from discord import app_commands
 from collections import Counter
 from tabulate import tabulate
 from collections import defaultdict
-from discord import Embed
-from discord.ext import tasks
-import json
+#from discord import Embed
+#from discord.ext import tasks
+#import json
 from datetime import datetime
 
 import unicodedata
@@ -58,22 +58,6 @@ def strip_non_ascii(text):
                    if unicodedata.category(c) != 'So')
 
 
-async def record_to_file(interaction: discord.Interaction, count: int,
-                         category: str):
-    guild = interaction.guild  # This is a discord.Guild object
-    user = await guild.fetch_member(interaction.user.id)
-    data = {
-        "id": interaction.user.id,
-        "name": user.display_name,  # using display name instead of name
-        "count": count,
-        "category": category,  # add the category here
-        "timestamp": datetime.now().isoformat(),
-    }
-    with open('data.json', 'a') as f:
-        json.dump(data, f)
-        f.write('\n')
-
-
 async def record_to_db(interaction: discord.Interaction, count: int,
                        category: str):
     guild = interaction.guild  # This is a discord.Guild object
@@ -85,7 +69,6 @@ async def record_to_db(interaction: discord.Interaction, count: int,
         "name": user.display_name,  # using display name instead of name
         "count": count,
         "category": category,  # add the category here
-        "timestamp": timestamp,
     }
 
     # Check if the user already has entries in the db
@@ -183,9 +166,14 @@ async def generate_leaderboard(interaction: discord.Interaction, points_dict,
         try:
             # Fetch data from the replit db
             for user_id in db.keys():
-                for timestamp, data in points_dict.items():
-                    if data['category'] == category:
-                        user_points[data['id']][category] += data['count']
+                print(f"Debug user_id: {user_id}")  # Debug print statement
+                data = db[user_id]
+                print(f"Debug data: {data}")  # Debug print statement
+                for timestamp, record in data.items():
+                    print(f"Debug records: {timestamp}: {record}"
+                          )  # Debug print statement
+                    if record['category'] == category:
+                        user_points[record['id']][category] += record['count']
         except FileNotFoundError:
             pass
         finally:

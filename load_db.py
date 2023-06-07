@@ -93,6 +93,30 @@ data = {
         "name": "guest******",
         "count": 1,
         "category": "amp"
+    },
+    "2023-06-07T06:39:10.354488": {
+        "id": "",
+        "name": "Manimal",
+        "count": 1,
+        "category": "amp",
+    },
+    "2023-06-07T06:39:11.354488": {
+        "id": "",
+        "name": "Calus Oryx",
+        "count": 1,
+        "category": "amp",
+    },
+    "2023-06-07T06:39:12.354488": {
+        "id": "",
+        "name": "Onyx Prime",
+        "count": 1,
+        "category": "amp",
+    },
+    "2023-06-07T06:39:13.354488": {
+        "id": "",
+        "name": "OneOne",
+        "count": 1,
+        "category": "amp"
     }
 }
 intents = discord.Intents.default()
@@ -115,8 +139,8 @@ async def record_to_db(timestamp, **record):
     }
 
     # Check if the user already has entries in the db
-    if str(record["name"]) in db.keys():
-        user_data = db[str(record["name"])]
+    if str(record["id"]) in db.keys():
+        user_data = db[str(record["id"])]
     else:
         user_data = {}
 
@@ -124,7 +148,7 @@ async def record_to_db(timestamp, **record):
     user_data[timestamp] = data
 
     # Store the user's data back in the replit db
-    db[str(record["name"])] = user_data
+    db[str(record["id"])] = user_data
 
 
 @client.event

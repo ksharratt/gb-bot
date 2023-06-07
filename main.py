@@ -5,9 +5,7 @@ from discord import app_commands
 from collections import Counter
 from tabulate import tabulate
 from collections import defaultdict
-#from discord import Embed
-#from discord.ext import tasks
-#import json
+
 from datetime import datetime
 
 import unicodedata

@@ -78,16 +78,27 @@ async def record_to_db(interaction: discord.Interaction, count: int,
                        category: str):
     guild = interaction.guild  # This is a discord.Guild object
     user = await guild.fetch_member(interaction.user.id)
-    key = f"{interaction.user.id}_{category}"
+    timestamp = datetime.now().isoformat()
+
     data = {
         "id": interaction.user.id,
         "name": user.display_name,  # using display name instead of name
         "count": count,
         "category": category,  # add the category here
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": timestamp,
     }
-    # Store the data in the replit db
-    db[key] = data
+
+    # Check if the user already has entries in the db
+    if str(interaction.user.id) in db.keys():
+        user_data = db[str(interaction.user.id)]
+    else:
+        user_data = {}
+
+    # Store the data under the timestamp key in the user's data
+    user_data[timestamp] = data
+
+    # Store the user's data back in the replit db
+    db[str(interaction.user.id)] = user_data
 
 
 @tree.command(name="add",
@@ -167,14 +178,14 @@ async def generate_leaderboard(interaction: discord.Interaction, points_dict,
     global LEADERBOARD_MESSAGE_ID
     global first_run
 
-    # Load historical data from JSON file on first run
+    # Load historical data from database file on first run
     if first_run:
         try:
             # Fetch data from the replit db
-            for key in db.keys():
-                if key.endswith(f"_{category}"):
-                    data = db[key]
-                    user_points[data['id']][category] += data['count']
+            for user_id in db.keys():
+                for timestamp, data in points_dict.items():
+                    if data['category'] == category:
+                        user_points[data['id']][category] += data['count']
         except FileNotFoundError:
             pass
         finally:

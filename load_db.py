@@ -132,7 +132,7 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD = int(os.getenv("DISCORD_GUILD"))
 LEADERBOARD_CHANNEL_ID = int(os.getenv("LEADERBOARD_CHANNEL_ID"))
 LEADERBOARD_MESSAGE_ID = os.getenv("LEADERBOARD_MESSAGE_ID")
-
+regular_dict = {}
 
 async def record_to_db(timestamp, **record):
     data = {
@@ -142,7 +142,7 @@ async def record_to_db(timestamp, **record):
         "category": record.get("category"),  # add the category here
     }
 
-    regular_dict = {}
+    
     user_dict = {}
     # Check if the user already has entries in the db
     if str(record["id"]) in db.keys():
@@ -192,6 +192,7 @@ async def on_ready():
     for timestamp, record in data.items():
         await record_to_db(timestamp, **record)
 
-    record_to_db
+
+    print(json.dumps(regular_dict))
 
 client.run(TOKEN)

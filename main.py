@@ -1,6 +1,7 @@
 import os
 import discord
 from discord import app_commands
+import json
 
 from collections import Counter
 from tabulate import tabulate
@@ -13,7 +14,11 @@ from replit import db
 
 import roles
 
+global first_run
 first_run = True
+
+
+
 
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
@@ -48,6 +53,32 @@ points = {"amp": 1}
 def strip_non_ascii(text):
     return ''.join(c for c in unicodedata.normalize('NFKD', text)
                    if unicodedata.category(c) != 'So')
+
+async def load_data(category):
+    if first_run:
+        try:
+            # Open and read the db.json file
+            with open('db.json', 'r') as f:
+                data = json.load(f)
+
+            # Iterate over the data from the db.json file
+            for user_id, records in data.items():
+                print(f"Debug user_id: {user_id}")  # Debug print statement
+                print(f"Debug records: {records}")  # Debug print statement
+                
+                # Write the records to the Replit database
+                db[user_id] = records
+                
+                for timestamp, record in records.items():
+                    print(f"Debug timestamp: {timestamp}: {record}")  # Debug print statement
+                    if record['category'] == category:
+                        guild = client.guilds[0]  # replace with the appropriate guild
+                        user = await guild.fetch_member(int(user_id))
+                        user_points[user.display_name][category] += record['count']
+            first_run = False
+
+        except Exception as e:
+            print(f"Error: {e}")
 
 
 async def record_to_db(interaction: discord.Interaction, count: int,
@@ -99,7 +130,7 @@ async def add_points(interaction: discord.Interaction, tasks: str):
     await generate_leaderboard(interaction, user_points, "amp")
 
     # Record data to a local file
-    await record_to_db(interaction, amp_count * points['amp'], 'amp')
+    await db_manager.update_db(interaction, amp_count * points['amp'], 'amp')
 
 
 @tree.command(name="remove",
@@ -128,7 +159,7 @@ async def remove_points(interaction: discord.Interaction, tasks: str):
     # Record data to a local file
     for task, count in task_counts.items():
         if task in points:
-            await record_to_db(interaction, -count * points[task], task)
+            await db_manager.update_db(interaction, -count * points[task], task)
 
 
 # Function to generate leaderboard
@@ -136,26 +167,9 @@ async def generate_leaderboard(interaction: discord.Interaction, points_dict,
                                category):
 
     global LEADERBOARD_MESSAGE_ID
-    global first_run
 
-    # Load historical data from database file on first run
-    if first_run:
-        try:
-            # Fetch data from the replit db
-            for user_id in db.keys():
-                print(f"Debug user_id: {user_id}")  # Debug print statement
-                data = db[user_id]
-                print(f"Debug data: {data}")  # Debug print statement
-                for timestamp, record in data.items():
-                    print(f"Debug records: {timestamp}: {record}"
-                          )  # Debug print statement
-                    if record['category'] == category:
-                        user_points[record['id']][category] += record['count']
-        except:
-            pass
-        finally:
-            first_run = False
-
+    await load_data("amp")
+                           
     # Sort user_points dictionary by category score in descending order
     sorted_dict = sorted(points_dict.items(),
                          key=lambda item: item[1][category],

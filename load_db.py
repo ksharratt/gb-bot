@@ -1,7 +1,8 @@
 from replit import db
+import asyncio
 import discord
-from datetime import datetime
 import os
+import json
 
 data = {
     "2023-06-07T06:38:55.354488": {
@@ -119,6 +120,9 @@ data = {
         "category": "amp"
     }
 }
+
+
+
 intents = discord.Intents.default()
 intents.members = True
 
@@ -138,6 +142,8 @@ async def record_to_db(timestamp, **record):
         "category": record.get("category"),  # add the category here
     }
 
+    regular_dict = {}
+    user_dict = {}
     # Check if the user already has entries in the db
     if str(record["id"]) in db.keys():
         user_data = db[str(record["id"])]
@@ -146,10 +152,14 @@ async def record_to_db(timestamp, **record):
 
     # Store the data under the timestamp key in the user's data
     user_data[timestamp] = data
+    user_dict[timestamp] = data
 
     # Store the user's data back in the replit db
     db[str(record["id"])] = user_data
+    regular_dict[str(record["id"])] = user_dict
 
+    # Display data
+    return regular_dict
 
 @client.event
 async def on_ready():
@@ -176,12 +186,12 @@ async def on_ready():
         else:
             print(f"Member {name} not found in guild.")
 
-    # Display data
-    print(data)
+
 
     # Store the data in the database
     for timestamp, record in data.items():
         await record_to_db(timestamp, **record)
 
+    record_to_db
 
 client.run(TOKEN)

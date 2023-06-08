@@ -13,12 +13,6 @@ from replit import db
 
 import roles
 
-
-def strip_non_ascii(text):
-    return ''.join(c for c in unicodedata.normalize('NFKD', text)
-                   if unicodedata.category(c) != 'So')
-
-
 first_run = True
 
 intents = discord.Intents.default()

@@ -14,7 +14,7 @@ from replit import db
 
 import roles
 
-global first_run
+
 first_run = True
 
 
@@ -54,7 +54,8 @@ def strip_non_ascii(text):
     return ''.join(c for c in unicodedata.normalize('NFKD', text)
                    if unicodedata.category(c) != 'So')
 
-async def load_data(category):
+async def load_data(interaction: discord.Interaction, category):
+    global first_run
     if first_run:
         try:
             # Open and read the db.json file
@@ -72,7 +73,7 @@ async def load_data(category):
                 for timestamp, record in records.items():
                     print(f"Debug timestamp: {timestamp}: {record}")  # Debug print statement
                     if record['category'] == category:
-                        guild = client.guilds[0]  # replace with the appropriate guild
+                        guild = GUILD
                         user = await guild.fetch_member(int(user_id))
                         user_points[user.display_name][category] += record['count']
             first_run = False
@@ -111,6 +112,8 @@ async def record_to_db(interaction: discord.Interaction, count: int,
               description="Add points for a task",
               guild=discord.Object(id=int(GUILD)))
 async def add_points(interaction: discord.Interaction, tasks: str):
+    print("add_points")
+    
     tasks = tasks.lower().split()
     amp_count = tasks.count("amp")
     response_messages = []
@@ -125,12 +128,14 @@ async def add_points(interaction: discord.Interaction, tasks: str):
             f"{points['amp'] * amp_count} AMP kill(s) added, Great job!")
 
     await interaction.response.send_message("\n".join(response_messages))
-
+    
+    
     # Update the leaderboard
     await generate_leaderboard(interaction, user_points, "amp")
+    
 
     # Record data to a local file
-    await db_manager.update_db(interaction, amp_count * points['amp'], 'amp')
+    await record_to_db(interaction, amp_count * points['amp'], 'amp')
 
 
 @tree.command(name="remove",
@@ -159,19 +164,47 @@ async def remove_points(interaction: discord.Interaction, tasks: str):
     # Record data to a local file
     for task, count in task_counts.items():
         if task in points:
-            await db_manager.update_db(interaction, -count * points[task], task)
+            await record_to_db(interaction, -count * points[task], task)
 
 
 # Function to generate leaderboard
 async def generate_leaderboard(interaction: discord.Interaction, points_dict,
                                category):
-
+    print("generate_leaderboard")
     global LEADERBOARD_MESSAGE_ID
+    global first_run
 
-    await load_data("amp")
-                           
+    if first_run:
+        try:
+            # Open and read the db.json file
+            with open('db.json', 'r') as f:
+                data = json.load(f)
+
+            # Iterate over the data from the db.json file
+            for user_id, records in data.items():
+                print(f"Debug user_id: {user_id}")  # Debug print statement
+                print(f"Debug records: {records}")  # Debug print statement
+                
+                # Write the records to the Replit database
+                db[user_id] = records
+                
+            for user_id in db.keys():
+                print(f"Debug user_id: {user_id}")  # Debug print statement
+                data = db[user_id]
+                print(f"Debug data: {data}")  # Debug print statement
+                for timestamp, record in data.items():
+                    print(f"Debug records: {timestamp}: {record}"
+                          )  # Debug print statement
+                    if record['category'] == category:
+                        user_points[record['id']][category] += record['count']
+        except:
+            pass
+        finally:
+            first_run = False
+
+    print("sort_dict")
     # Sort user_points dictionary by category score in descending order
-    sorted_dict = sorted(points_dict.items(),
+    sorted_dict = sorted(user_points.items(),
                          key=lambda item: item[1][category],
                          reverse=True)
 

@@ -111,4 +111,3 @@ ignoredPackages = ["unit_tests"]
 run = ["sh", "-c", "python main.py"]
 ignorePorts = true
 deploymentTarget = "gce"
-build = ["sh", "-c", "./import_db.sh"]

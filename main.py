@@ -168,7 +168,7 @@ async def remove_points(interaction: discord.Interaction, tasks: str):
 
 
 # Function to generate leaderboard
-async def generate_leaderboard(interaction: discord.Interaction, points_dict,
+async def generate_leaderboard(interaction: discord.Interaction, user_points,
                                category):
     print("generate_leaderboard")
     global LEADERBOARD_MESSAGE_ID

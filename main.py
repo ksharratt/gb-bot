@@ -14,6 +14,8 @@ import unicodedata
 
 import roles
 
+from flask import Flask, jsonify
+import threading
 
 first_run = True
 
@@ -246,4 +248,34 @@ async def on_ready():
     print("Ready!")
 
 
+
+
+
+app = Flask(__name__)
+
+db = {}  # Your dictionary database
+
+@app.route('/')
+def home():
+    return jsonify(db), 200
+
+def run():
+    app.run(host='0.0.0.0', port=8080)
+
+def keep_alive():
+    server = threading.Thread(target=run)
+    server.start()
+
+
+
+
+
+
+
+
+
+
+
+
 client.run(TOKEN)
+keep_alive()

@@ -10,14 +10,14 @@ from collections import defaultdict
 from datetime import datetime
 
 import unicodedata
-from replit import db
+#from replit import db
 
 import roles
 
 
 first_run = True
 
-
+db = {}
 
 
 intents = discord.Intents.default()

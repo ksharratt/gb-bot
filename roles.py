@@ -1,11 +1,19 @@
 import os
 import discord
 
+env_type = os.getenv('ENV_TYPE')
+
 # Define the role IDs in your .env file
-ARCH_PIRATE_ROLE_ID = int(os.environ["DEV_ARCH_PIRATE_ROLE_ID"])
-CORSAIR_ROLE_ID = int(os.environ["DEV_CORSAIR_ROLE_ID"])
-DESPOILER_ROLE_ID = int(os.environ["DEV_DESPOILER_ROLE_ID"])
-RAIDER_ROLE_ID = int(os.environ["DEV_RAIDER_ROLE_ID"])
+if env_type == 'dev':
+    ARCH_PIRATE_ROLE_ID = int(os.environ["DEV_ARCH_PIRATE_ROLE_ID"])
+    CORSAIR_ROLE_ID = int(os.environ["DEV_CORSAIR_ROLE_ID"])
+    DESPOILER_ROLE_ID = int(os.environ["DEV_DESPOILER_ROLE_ID"])
+    RAIDER_ROLE_ID = int(os.environ["DEV_RAIDER_ROLE_ID"])
+else:  # 'prod' or any other value
+    ARCH_PIRATE_ROLE_ID = int(os.environ["ARCH_PIRATE_ROLE_ID"])
+    CORSAIR_ROLE_ID = int(os.environ["CORSAIR_ROLE_ID"])
+    DESPOILER_ROLE_ID = int(os.environ["DESPOILER_ROLE_ID"])
+    RAIDER_ROLE_ID = int(os.environ["RAIDER_ROLE_ID"])
 
 async def assign(interaction, leaderboard_data):
     guild = interaction.guild # This is a discord.Guild object

@@ -1,7 +1,8 @@
 from replit import db
+import asyncio
 import discord
-from datetime import datetime
 import os
+import json
 
 data = {
     "2023-06-07T06:38:55.354488": {
@@ -93,8 +94,35 @@ data = {
         "name": "guest******",
         "count": 1,
         "category": "amp"
+    },
+    "2023-06-07T06:39:10.354488": {
+        "id": "",
+        "name": "Manimal",
+        "count": 1,
+        "category": "amp",
+    },
+    "2023-06-07T06:39:11.354488": {
+        "id": "",
+        "name": "Calus Oryx",
+        "count": 1,
+        "category": "amp",
+    },
+    "2023-06-07T06:39:12.354488": {
+        "id": "",
+        "name": "Onyx Prime",
+        "count": 1,
+        "category": "amp",
+    },
+    "2023-06-07T06:39:13.354488": {
+        "id": "",
+        "name": "OneOne",
+        "count": 1,
+        "category": "amp"
     }
 }
+
+
+
 intents = discord.Intents.default()
 intents.members = True
 
@@ -104,7 +132,7 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD = int(os.getenv("DISCORD_GUILD"))
 LEADERBOARD_CHANNEL_ID = int(os.getenv("LEADERBOARD_CHANNEL_ID"))
 LEADERBOARD_MESSAGE_ID = os.getenv("LEADERBOARD_MESSAGE_ID")
-
+regular_dict = {}
 
 async def record_to_db(timestamp, **record):
     data = {
@@ -114,18 +142,24 @@ async def record_to_db(timestamp, **record):
         "category": record.get("category"),  # add the category here
     }
 
+    
+    user_dict = {}
     # Check if the user already has entries in the db
-    if str(record["name"]) in db.keys():
-        user_data = db[str(record["name"])]
+    if str(record["id"]) in db.keys():
+        user_data = db[str(record["id"])]
     else:
         user_data = {}
 
     # Store the data under the timestamp key in the user's data
     user_data[timestamp] = data
+    user_dict[timestamp] = data
 
     # Store the user's data back in the replit db
-    db[str(record["name"])] = user_data
+    db[str(record["id"])] = user_data
+    regular_dict[str(record["id"])] = user_dict
 
+    # Display data
+    return regular_dict
 
 @client.event
 async def on_ready():
@@ -152,12 +186,13 @@ async def on_ready():
         else:
             print(f"Member {name} not found in guild.")
 
-    # Display data
-    print(data)
+
 
     # Store the data in the database
     for timestamp, record in data.items():
         await record_to_db(timestamp, **record)
 
+
+    print(json.dumps(regular_dict))
 
 client.run(TOKEN)

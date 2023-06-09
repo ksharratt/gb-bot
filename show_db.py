@@ -8,3 +8,6 @@ for user_id in db.keys():
     #print(f"Debug data: {data}")  # Debug print statement
     for timestamp, record in data.items():
         print(f"Debug records: {timestamp}: {record}")  # Debug print statement
+
+
+

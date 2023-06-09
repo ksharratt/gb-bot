@@ -1,1 +1,8 @@
-# This module contains the implementation of all the commands that the bot can execute.
+# Imports
+import discord
+import asyncio
+
+def setup_commands(client):
+    @client.command()
+    asyncio.def ping(ctx):
+        await ctx.send("Pong!")

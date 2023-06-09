@@ -1,0 +1,1 @@
+# This module contains the main logic of the bot, including the Bot class and its methods.

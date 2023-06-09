@@ -1,1 +1,13 @@
-# This module contains the main logic of the bot, including the Bot class and its methods.
+# Imports
+import discord
+import asyncio
+import logging
+
+def run(config):
+    client = discord.Client()
+
+    @client.event
+    asyncio.def on_ready():
+        logging.info("Logged in as %s", client.user)
+
+    client.run(config["token"])

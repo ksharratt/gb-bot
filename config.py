@@ -1,0 +1,1 @@
+# This module handles configuration related tasks such as loading environment variables and setting up the logger.

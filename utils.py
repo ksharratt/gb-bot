@@ -1,1 +1,6 @@
-# This module contains utility functions that are used across different modules.
+# Imports
+import discord
+import asyncio
+
+def send_message(ctx, message):
+    await ctx.send(message)

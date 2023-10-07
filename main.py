@@ -21,12 +21,12 @@ first_run = True
 
 db = {}
 
-
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 
 env_type = os.getenv('ENV_TYPE')
+il_season = "Gunboat Season 7 - Hydra 339 - 22nd Sept 2023"
 
 if env_type == 'dev':
     TOKEN = os.getenv("DISCORD_TOKEN")
@@ -56,6 +56,7 @@ def strip_non_ascii(text):
     return ''.join(c for c in unicodedata.normalize('NFKD', text)
                    if unicodedata.category(c) != 'So')
 
+
 async def load_data(interaction: discord.Interaction, category):
     global first_run
     if first_run:
@@ -68,16 +69,18 @@ async def load_data(interaction: discord.Interaction, category):
             for user_id, records in data.items():
                 print(f"Debug user_id: {user_id}")  # Debug print statement
                 print(f"Debug records: {records}")  # Debug print statement
-                
+
                 # Write the records to the Replit database
                 db[user_id] = records
-                
+
                 for timestamp, record in records.items():
-                    print(f"Debug timestamp: {timestamp}: {record}")  # Debug print statement
+                    print(f"Debug timestamp: {timestamp}: {record}"
+                          )  # Debug print statement
                     if record['category'] == category:
                         guild = GUILD
                         user = await guild.fetch_member(int(user_id))
-                        user_points[user.display_name][category] += record['count']
+                        user_points[
+                            user.display_name][category] += record['count']
             first_run = False
 
         except Exception as e:
@@ -115,7 +118,7 @@ async def record_to_db(interaction: discord.Interaction, count: int,
               guild=discord.Object(id=int(GUILD)))
 async def add_points(interaction: discord.Interaction, tasks: str):
     print("add_points")
-    
+
     tasks = tasks.lower().split()
     amp_count = tasks.count("amp")
     response_messages = []
@@ -130,11 +133,9 @@ async def add_points(interaction: discord.Interaction, tasks: str):
             f"{points['amp'] * amp_count} AMP kill(s) added, Great job!")
 
     await interaction.response.send_message("\n".join(response_messages))
-    
-    
+
     # Update the leaderboard
     await generate_leaderboard(interaction, user_points, "amp")
-    
 
     # Record data to a local file
     await record_to_db(interaction, amp_count * points['amp'], 'amp')
@@ -186,10 +187,10 @@ async def generate_leaderboard(interaction: discord.Interaction, user_points,
             for user_id, records in data.items():
                 print(f"Debug user_id: {user_id}")  # Debug print statement
                 print(f"Debug records: {records}")  # Debug print statement
-                
+
                 # Write the records to the Replit database
                 db[user_id] = records
-                
+
             for user_id in db.keys():
                 print(f"Debug user_id: {user_id}")  # Debug print statement
                 data = db[user_id]
@@ -232,8 +233,9 @@ async def generate_leaderboard(interaction: discord.Interaction, user_points,
         except:
             pass
 
-    new_message = await channel.send(f"```\n ###  AMP Killboard  ### \
-                                     \n{leaderboard}\n```")
+    new_message = await channel.send(
+        f"```\n ###  AMP Killboard - {il_season}  ### \
+         \n{leaderboard}\n```")
 
     LEADERBOARD_MESSAGE_ID = new_message.id
     # Assign roles based on the leaderboard
@@ -248,33 +250,23 @@ async def on_ready():
     print("Ready!")
 
 
-
-
-
 app = Flask(__name__)
 
 db = {}  # Your dictionary database
+
 
 @app.route('/')
 def home():
     return jsonify(db), 200
 
+
 def run():
     app.run(host='0.0.0.0', port=8080)
+
 
 def keep_alive():
     server = threading.Thread(target=run)
     server.start()
-
-
-
-
-
-
-
-
-
-
 
 
 client.run(TOKEN)
